@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant Audio Visualization</title>
+  <style>
+    /* Your CSS styling here */
+  </style>
+</head>
+<body>
+  <h1>Audio Recording Demo</h1>
+  <button id="startButton">Start Recording</button>
+  <button id="stopButton" disabled>Stop Recording</button>
+  <script>
+    // Set your backend API URL
+    const API_BASE_URL = "https://yourusername.pythonanywhere.com";
+
+    let mediaRecorder;
+    let audioChunks = [];
+
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+
+    // Start recording: request microphone access and initialize MediaRecorder
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = event => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstart = () => {
+          console.log("Recording started");
+          startButton.disabled = true;
+          stopButton.disabled = false;
+        };
+
+        mediaRecorder.onstop = async () => {
+          console.log("Recording stopped");
+          startButton.disabled = false;
+          stopButton.disabled = true;
+          
+          // Create a Blob from the recorded audio
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          // Prepare the form data to send the audio file to the backend
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "recording.wav");
+          
+          // Send the audio file to the backend
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/process_audio`, {
+              method: 'POST',
+              body: formData
+            });
+            const result = await response.json();
+            console.log(result);
+          } catch (error) {
+            console.error("Error sending audio:", error);
+          }
+        };
+
+        mediaRecorder.start();
+      } catch (error) {
+        console.error("Error accessing microphone:", error);
+      }
+    }
+
+    // Stop recording
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+    }
+
+    startButton.addEventListener('click', startRecording);
+    stopButton.addEventListener('click', stopRecording);
+  </script>
+</body>
+</html>
