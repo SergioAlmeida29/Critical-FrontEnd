@@ -1,0 +1,24 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #000;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
+.status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: monospace;
+    font-size: 14px;
+    z-index: 10;
+}
